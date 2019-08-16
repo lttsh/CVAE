@@ -122,7 +122,7 @@ class CVAE(tf_lib.trainer.Trainer):
     def generate_samples(self, condition):
         mu_prior, logv_prior = self.sess.run([self.mu_prior, self.logv_prior], feed_dict={self.condition:condition})
         epsilon = np.random.randn(*mu_prior.shape)
-        latent_z = epsilon * mu_prior + np.exp(0.5 * logv_prior)
+        latent_z = epsilon * np.exp(0.5 * logv_prior) +  mu_prior
         logits = self.sess.run(self.target_logits, feed_dict={self.condition:condition, self.latent_var:latent_z})
         logits = np.reshape(logits, (-1, 28, 28))
         return logits
