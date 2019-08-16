@@ -6,7 +6,7 @@ from CVAE import cvae_trainer
 from CVAE import models
 from tf_lib.utils import visualize_images
 def preproc(x):
-    return x > 127
+    return x > 0
 
 hparams = tf.contrib.training.HParams(
     num_val=10000,
@@ -15,17 +15,15 @@ hparams = tf.contrib.training.HParams(
     latent_dim=200,
     debug=True,
     log_dir='logs',
-    experiment_name='test',
+    experiment_name='test_prior',
     condition_size=(10,),
     target_size=(28, 28),
     num_hidden=1000,
-    epochs=20,
-    lr=1e-2,
+    epochs=23,
+    lr=1e-3,
     log_freq=20,
     preproc=preproc,
 )
-
-# tf_lib.utils.load_params(hparams, args, None)
 train_data, val_data, test_data = tf_lib.loaders.load_mnist(**hparams.values())
 tf_lib.utils.visualize_images(train_data[0][:64] * 255, 'mnist.jpg')
 
