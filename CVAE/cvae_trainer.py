@@ -24,7 +24,7 @@ def quadrant_tl(data):
 
 
 class CVAE(tf_lib.trainer.Trainer):
-    def __init__(self, sess, model, params, load_data_f, name=None, mode="train"):
+    def __init__(self, sess, model, params, load_data_f, condition_f, name=None, mode="train"):
         '''
         sess: tf.Session() object
         model: dictionary of models to be trained
@@ -34,6 +34,7 @@ class CVAE(tf_lib.trainer.Trainer):
         mode: train | eval
         '''
         self.model = model
+        self.condition_f = condition_f
         tf_lib.trainer.Trainer.__init__(self, sess, params, load_data_f, name, mode)
 
     def build_graph(self):
@@ -82,7 +83,7 @@ class CVAE(tf_lib.trainer.Trainer):
                         self.step, self.summary, self.kl, self.log_prob, self.loss, self.target_logits, self.target_flattened], feed_dict={
                         self.lr:self.params.lr,
                         self.is_training:True,
-                        self.condition:quadrant_tl(data[0]),
+                        self.condition:self.condition_f(data),
                         self.target:data[0]
                     })
 
@@ -93,8 +94,8 @@ class CVAE(tf_lib.trainer.Trainer):
                     self.counter+=1
             print("[*] Epoch {}/{} completed".format(epoch + 1, self.params.epochs))
             self.eval()
-            mu_posterior, logv_posterior = self.sess.run([self.mu_posterior, self.logv_posterior], feed_dict={self.target:data[0], self.condition:quadrant_tl(data[0])})
-            mu_prior, logv_prior = self.sess.run([self.mu_prior, self.logv_prior], feed_dict={self.condition:quadrant_tl(data[0])})
+            mu_posterior, logv_posterior = self.sess.run([self.mu_posterior, self.logv_posterior], feed_dict={self.target:data[0], self.condition:self.condition_f(data)})
+            mu_prior, logv_prior = self.sess.run([self.mu_prior, self.logv_prior], feed_dict={self.condition:self.condition_f(data)})
             print("[*] Posterior Mu {}, Logv {}".format(np.mean(mu_posterior), np.mean(logv_posterior)))
             print("[*] Prior Mu {}, Logv {}".format(np.mean(mu_prior), np.mean(logv_prior)))
 
@@ -108,7 +109,7 @@ class CVAE(tf_lib.trainer.Trainer):
             summ_, kl_, log_prob_, loss_ = self.sess.run([
                 self.summary, self.kl, self.log_prob, self.loss],
                 feed_dict={
-                    self.condition:quadrant_tl(data[0]),
+                    self.condition:self.condition_f(data),
                     self.target: data[0]
                 })
             total_loss += loss_ * len(data)

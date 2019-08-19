@@ -5,7 +5,6 @@ import tf_lib
 from CVAE import cvae_trainer
 from CVAE import models
 from tf_lib.utils import visualize_images
-import tf_lib
 
 def preproc(x):
     return x > 0
@@ -17,7 +16,7 @@ hparams = tf.contrib.training.HParams(
     latent_dim=200,
     debug=True,
     log_dir='logs',
-    experiment_name='test_prior',
+    experiment_name='test_prior_2',
     condition_size=(10,),
     target_size=(28, 28),
     num_hidden=1000,
@@ -36,7 +35,7 @@ model = {
     'generator_net': models.GenerationNetwork(hparams),
 }
 with tf.Session() as sess:
-    trainer = cvae_trainer.CVAE(sess, model, hparams, tf_lib.loaders.load_mnist)
+    trainer = cvae_trainer.CVAE(sess, model, hparams, tf_lib.loaders.load_mnist, lambda d : cvae_trainer.one_hot(d[1]))
     tf_lib.utils.show_all_variables()
     trainer.train()
 

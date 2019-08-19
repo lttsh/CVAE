@@ -35,7 +35,7 @@ def show_all_variables(scope=None):
 def show_variables(vars):
     slim.model_analyzer.analyze_vars(vars, print_info=True)
 
-def visualize_images(images, path, num_rows=None):
+def visualize_images(images, path=None, num_rows=None):
     '''
     Visualizes images as a grid
     Input is (B, H, W, C) or (B, H, W)
@@ -58,7 +58,8 @@ def visualize_images(images, path, num_rows=None):
         i = n // num_columns
         j = int(n%num_columns)
         grid_visualizer[i*img_size:i*img_size + img_size, j*img_size:j*img_size+img_size] = x
-    imageio.imwrite(path, grid_visualizer.astype(np.uint8))
+    if path is not None:
+        imageio.imwrite(path, grid_visualizer.astype(np.uint8))
     return grid_visualizer
 
 def visualize_histogram(true_bpd, false_bpd, path=None):
