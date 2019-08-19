@@ -16,11 +16,11 @@ hparams = tf.contrib.training.HParams(
     latent_dim=200,
     debug=True,
     log_dir='logs',
-    experiment_name='test_prior_2',
-    condition_size=(10,),
+    experiment_name='test_quadrants',
+    condition_size=(28, 28),
     target_size=(28, 28),
     num_hidden=1000,
-    epochs=23,
+    epochs=20,
     lr=1e-3,
     log_freq=20,
     preproc=preproc,
@@ -35,12 +35,12 @@ model = {
     'generator_net': models.GenerationNetwork(hparams),
 }
 with tf.Session() as sess:
-    trainer = cvae_trainer.CVAE(sess, model, hparams, tf_lib.loaders.load_mnist, lambda d : cvae_trainer.one_hot(d[1]))
+    trainer = cvae_trainer.CVAE(sess, model, hparams, tf_lib.loaders.load_mnist, lambda x : cvae_trainer.quadrant_tl(x[0]))
     tf_lib.utils.show_all_variables()
     trainer.train()
 
-    conditions = np.arange(10)
-    conditions = cvae_trainer.one_hot(conditions)
-    conditions = np.concatenate([conditions for i in range(10)], axis=0)
+    conditions = cvae_trainer.quadrant_tl(test_data[0][:64])
+    # conditions = cvae_trainer.one_hot(conditions)
+    # conditions = np.concatenate([conditions for i in range(10)], axis=0)
     logits = trainer.generate_samples(conditions) * 255
-    visualize_images(logits, 'results.jpg')
+    visualize_images(logits, 'results_quadrants.jpg')
