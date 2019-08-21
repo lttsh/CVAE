@@ -106,7 +106,7 @@ class CVAE(tf_lib.trainer.Trainer):
         total_kl = 0.
         total_nll = 0.
         total = 0.
-        total_nll_ais = 0.
+        total_nll_is = 0.
 
         with tqdm(total=157) as pbar:
             for i, data in enumerate(test_iterator):
@@ -116,41 +116,19 @@ class CVAE(tf_lib.trainer.Trainer):
                         self.condition:self.condition_f(data),
                         self.target: data[0]
                     })
-                nll_ais = self.importance_sampling(self.condition_f(data), data[0])
+                nll_is = self.importance_sampling(self.condition_f(data), data[0])
                 total_loss += loss_ * len(data)
                 total_kl += np.mean(kl_) * len(data)
                 total_nll += np.mean(-log_prob_) * len(data)
-                total_nll_ais += nll_ais * len(data)
+                total_nll_is += nll_is * len(data)
                 total += len(data)
 
                 self.test_writer.add_summary(summ_, self.counter)
                 self.test_writer.flush()
                 pbar.update(1)
-                pbar.set_postfix(ais=total_nll_ais/total, kl=total_kl/total, loss=total_loss/total, nll = total_nll/total)
+                pbar.set_postfix(is=total_nll_is/total, kl=total_kl/total, loss=total_loss/total, nll = total_nll/total)
         print("[*] Evaluated Loss:{}, KL:{}, NLL: {}".format(total_loss/total, total_kl/total, total_nll/total))
-        print("[*] AIS estimation {}".format(total_nll_ais/total))
-
-
-    def monte_carlo_sampling(self, condition, data, S=10000):
-        mu_prior, logv_prior = self.sess.run(
-            [self.mu_prior, self.logv_prior],
-            feed_dict={self.condition:condition}
-            )
-        epsilon = np.random.randn(S, *mu_prior.shape) # S, B, ...
-        latent_z = epsilon * np.exp(0.5 * logv_prior[np.newaxis, :]) + mu_prior[np.newaxis, :]
-        latent_z = np.reshape(latent_z, (-1, *mu_prior.shape[1:]))
-        logits = self.sess.run(
-            self.target_logits,
-            feed_dict={
-                self.condition:np.reshape(np.stack([condition for i in range(S)], axis=0), (-1, *self.params.condition_size)),
-                self.latent_var:latent_z
-            }
-        ) # SxB, ....
-        logits = np.reshape(logits, (S, -1, np.prod(self.params.target_size)))
-        target_flattened = np.reshape(data, (-1, np.prod(self.params.target_size)))
-        probs = np.mean(logits * target_flattened[np.newaxis, :] + (1-logits)*(1-target_flattened[np.newaxis, :]), axis=0)
-        nll = - np.mean(np.sum(np.log(probs+1e-12), axis=-1), axis=0)
-        return nll
+        print("[*] IS estimation {}".format(total_nll_is/total))
 
     def importance_sampling(self, condition, data, S=1000):
         prior_gaussian = tfp.distributions.MultivariateNormalDiag(loc=self.mu_prior, scale_diag=tf.math.exp(0.5 * self.logv_prior))
