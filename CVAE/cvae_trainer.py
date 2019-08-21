@@ -126,11 +126,11 @@ class CVAE(tf_lib.trainer.Trainer):
                 self.test_writer.add_summary(summ_, self.counter)
                 self.test_writer.flush()
                 pbar.update(1)
-                pbar.set_postfix(is=total_nll_is/total, kl=total_kl/total, loss=total_loss/total, nll = total_nll/total)
+                pbar.set_postfix(nll_is=total_nll_is/total, kl=total_kl/total, loss=total_loss/total, nll = total_nll/total)
         print("[*] Evaluated Loss:{}, KL:{}, NLL: {}".format(total_loss/total, total_kl/total, total_nll/total))
         print("[*] IS estimation {}".format(total_nll_is/total))
 
-    def importance_sampling(self, condition, data, S=1000):
+    def importance_sampling(self, condition, data, S=100):
         prior_gaussian = tfp.distributions.MultivariateNormalDiag(loc=self.mu_prior, scale_diag=tf.math.exp(0.5 * self.logv_prior))
         posterior_gaussian = tfp.distributions.MultivariateNormalDiag(loc=self.mu_posterior, scale_diag=tf.math.exp(0.5 * self.logv_posterior))
         prior_log_prob = prior_gaussian.log_prob(self.latent_var) # B,
