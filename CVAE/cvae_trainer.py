@@ -23,6 +23,11 @@ def quadrant_tl(data):
     result[:, :14, :14] = data[:, :14, :14]
     return result
 
+def half_l(data):
+    result = np.zeros_like(data)
+    result[:, :, :14] = data[:, :, :14]
+    return result
+
 
 class CVAE(tf_lib.trainer.Trainer):
     def __init__(self, sess, model, params, load_data_f, condition_f, name=None, mode="train"):
